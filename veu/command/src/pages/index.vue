@@ -1,29 +1,49 @@
 <script setup>
 import { ref, watch } from 'vue';
 import { useSpeechRecognition } from '@/composables/useSpeechRecognition';
+import { useTheme } from 'vuetify';
 
-// Importem el composable amb la variable interimTranscript
 const { isListening, transcript, interimTranscript, error, start } = useSpeechRecognition();
+const theme = useTheme();
 
 const uiMessage = ref("Prem el botó per començar...");
 const statusColor = ref("primary");
 
-// Lògica de reacció a la veu
+const showSnackbar = ref(false);
+const snackbarMessage = ref('');
+
 watch(transcript, (newText) => {
   const command = newText.toLowerCase().trim();
-  
-  if (command.includes('hola')) {
+
+  if (command.includes('hello')) {
     uiMessage.value = "Hola! Benvingut a l'aplicació.";
     statusColor.value = "success";
-    alert("Hola!"); 
-  } 
+    alert("Hola!");
+  }
   else if (command.includes('help')) {
     uiMessage.value = "Aquesta és una prova de concepte.";
     statusColor.value = "info";
-  } 
-  else {
+  }
+  else if (command.includes('esborra') || command.includes('borrar')) {
+    uiMessage.value = "Prem el botó per començar...";
+    statusColor.value = "primary";
+  }
+  else if (command.includes('dark')) {
+    theme.global.name.value = 'dark';
+    uiMessage.value = "Tema fosc activat.";
+    statusColor.value = "primary";
+  }
+  else if (command.includes('light')) {
+    theme.global.name.value = 'light';
+    uiMessage.value = "Tema clar activat.";
+    statusColor.value = "primary";
+  }
+  else if (newText) {
     uiMessage.value = `Comanda no reconeguda: "${newText}"`;
     statusColor.value = "warning";
+    snackbarMessage.value = `Comanda no reconeguda: "${newText}"`;
+    showSnackbar.value = true;
+    setTimeout(() => showSnackbar.value = false, 3000);
   }
 });
 </script>
@@ -43,16 +63,15 @@ watch(transcript, (newText) => {
             :class="{'text-red animate-pulse': isListening}"
           ></v-icon>
         </div>
-        
+
         <p class="text-h6 font-weight-bold">{{ isListening ? 'Escoltant...' : 'En espera' }}</p>
-        
-        <!-- Debug visual per a l'alumne -->
+
         <p v-if="interimTranscript" class="text-caption text-grey">
-            Detectant: {{ interimTranscript }}
+          Detectant: {{ interimTranscript }}
         </p>
-        
+
         <p class="mt-2 text-body-1">{{ uiMessage }}</p>
-        
+
         <v-alert v-if="error" type="error" class="mt-3" density="compact">{{ error }}</v-alert>
       </v-card-text>
 
@@ -65,6 +84,10 @@ watch(transcript, (newText) => {
         </v-btn>
       </v-card-actions>
     </v-card>
+
+    <v-snackbar v-model="showSnackbar" :timeout="3000" color="red" location="bottom">
+      {{ snackbarMessage }}
+    </v-snackbar>
   </v-container>
 </template>
 
