@@ -1,0 +1,23 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement style="flex-direction: column; padding: 20px;">
+
+        <ui:Label text="ENCRYPT / DECRYPT" class="title"/>
+
+        <ui:TextField name="inputText" label="Text a encriptar"/>
+        <ui:Button name="encryptBtn" text="Encrypt"/>
+        <ui:Label name="encryptedLabel"/>
+
+        <ui:Button name="decryptBtn" text="Decrypt"/>
+        <ui:Label name="decryptedLabel"/>
+
+        <ui:Label text="HASH" class="title"/>
+
+        <ui:TextField name="passwordField" label="Password" is-password-field="true"/>
+        <ui:Button name="hashBtn" text="Generate Hash"/>
+        <ui:Label name="hashLabel"/>
+
+        <ui:Button name="verifyBtn" text="Verify"/>
+        <ui:Label name="verifyLabel"/>
+
+    </ui:VisualElement>
+</ui:UXML>
