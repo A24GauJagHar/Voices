@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="ISO-8859-1" />
+    <title>Gestión Analática de Tiempos y Gastos - Preview</title>
+    <style>
+        /* Basic styling to mimic the table structure seen in the code */
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
+        #Layer2 { 
+            width: 558px; 
+            margin: 50px auto; 
+            border: 1px solid #ccc; 
+            padding: 15px; 
+            background-color: white; 
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1); 
+        }
+        .TituloTablas { font-size: 1.2em; font-weight: bold; padding: 10px; }
+        .CamposTablas { background-color: #eee; padding: 8px; width: 25%; }
+        .CamposTexto { width: 95%; padding: 5px; border: 1px solid #aaa; }
+        table { width: 100%; border-collapse: collapse; }
+        td { padding: 5px; border: 1px solid #ddd; }
+        textarea { resize: vertical; }
+    </style>
+
+    <script language="JavaScript">
+    function Validar() {
+        // NOTE: The PHP variables are mocked here for the static preview
+        // document.form1.clave and document.form1.descripcion refer to the input/textarea names.
+        
+        let error = "";
+        let retorno = true;
+
+        if (document.form1.clave.value === "") { 
+            error = error + "ATENCIÓN: Introduzca la Clave!\n";
+            retorno = false;
+        }
+
+        if (document.form1.descripcion.value === "") { 
+            error = error + "ATENCIÓN: Debe introducirse una descripción!\n";
+            retorno = false;
+        }
+
+        if (retorno === false) {
+            alert(error);
+        }
+
+        // Return false to stop the form from trying to submit to 'insert_horas.php' (which doesn't exist here)
+        return false; 
+    }
+    </script>
+</head>
+<body>
+
+<div id="Layer2">
+    <form name="form1" action="#" method="post" onSubmit="return Validar()">
+        <table width="100%" border="0" align="left" cellspacing="1">
+            <tr>
+                <td height="50" colspan="2" style="background-color:#ccc;"><div align="center" class="TituloTablas"><strong>AÑADIR HORAS A UN PROYECTO</strong></div></td>
+            </tr>
+            <tr>
+                <td class="CamposTablas">Profesional:</td>
+                <td>
+                    Juan Pérez (Example)
+                    <input type="hidden" name="profesionaloculto" value="101" />
+                </td>
+            </tr>
+            <tr>
+                <td class="CamposTablas">Proyecto:</td>
+                <td style="background-color:#DCDCDC;">
+                    <select name="proyecto" class="CamposTexto" id="proyecto">
+                        <option value="45">HYG S.L. Mantenimiento General | Cerrado: no</option>
+                        <option value="46">ACME Corp. Project Alpha | Cerrado: no</option>
+                        <option value="47">Beta Inc. Training Module | Cerrado: si</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td class="CamposTablas">Fecha:</td>
+                <td>
+                    <input type="text" name="fecha" value="" style="width:100px;">
+                    <input type="button" value="Cal" onclick="alert('Calendar function is disabled in this static preview.')">
+                </td>
+            </tr>
+            <tr>
+                <td class="CamposTablas">Minutos:</td>
+                <td><input name="minutos" type="text" class="CamposTexto" id="minutos" style="width:100px;"/></td>
+            </tr>
+            <tr>
+                <td class="CamposTablas"><p>Clave :</p></td>
+                <td><input name="clave" type="text" class="CamposTexto" id="clave" size="50" maxlength="50" /></td>
+            </tr>
+            <tr>
+                <td class="CamposTablas">Descripción:</td>
+                <td><textarea name="descripcion" cols="66" rows="4" class="CamposTexto"></textarea></td>
+            </tr>
+            <tr>
+                <td height="33" class="CamposTablas">&nbsp;</td>
+                <td>
+                    <input type="submit" name="InsertarYSeguir" value="Añadir y Seguir" />
+                    <input type="submit" name="InsertarYTerminar" value="Añadir y Terminar" />
+                    <input type="button" name="Terminar" value="Terminar" onclick="alert('Terminar button clicked.')" />
+                </td>
+            </tr>
+            <tr>
+                <td height="42" colspan="2"></td>
+            </tr>
+        </table>
+    </form>
+</div>
+
+</body>
+</html>

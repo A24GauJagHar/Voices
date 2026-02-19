@@ -1,0 +1,431 @@
+1. Objectiu de la pràctica
+Implementar un petit servidor en Node.js amb Express i WebSocket (llibreria ws) que gestioni el registre d’assistència d’un sol alumne: tu mateix, de fet, has de posar el teu nom en les comunicacions.
+
+Per tal que la prova es consideri superada, ha de tindre com a mínim un part demostrable funcional de rutes, i una part demostrable funcional de web sockets. Tingues-ho en compte per tal d'organitzar el teu temps. 
+
+El servidor haurà de:
+
+Mantenir en memòria el registre d’assistència d’un alumne. No utilitzeu base de dades.
+
+Permetre afegir, modificar, eliminar i consultar els dies d’assistència mitjançant rutes HTTP (provar amb Thunder Client o Postman).
+
+Notificar en temps real tots els canvis d’assistència a través de WebSocket a tots els clients connectats.
+
+Treballar sempre amb JSON, tant per HTTP com per WebSocket.
+
+2. Model de dades (format JSON obligatori)
+El servidor mantindrà en memòria un únic objecte d’estat amb aquest format exacte:
+
+{ 
+  "studentName": "Nom Cognoms Alumne",
+  "attendanceDays": [
+    {
+       "attendanceDate": "7",
+       "attendanceStatus": "PRESENT"
+    }
+   ]
+} 
+Inclou al nivell superior de l’objecte d’estat el camp: "metaAssistenciaDebug": {}
+
+Requisits:
+
+studentName (string)
+
+Ha de contenir el teu nom i cognoms reals (per exemple: "Pol Prats").
+
+És el mateix per totes les respostes.
+
+attendanceDays (array)
+
+Llista de dies d’assistència, cada dia és un objecte amb:
+
+attendanceDate (string): data en format autonumeric. No cal posar dates de veritat. 
+Exemple: "1".
+
+attendanceStatus (string): un dels valors següents, en majúscules:
+
+"PRESENT"
+
+"RETARD"
+
+"FALTA"
+
+No pot haver-hi dues entrades amb la mateixa attendanceDate.
+
+3. Requisits tècnics generals
+Ús de Node.js + Express per a les rutes HTTP.
+
+Ús de la llibreria ws per gestionar WebSockets.
+
+No es pot utilitzar cap base de dades: tota la informació ha de viure en una variable global en memòria (per exemple let attendanceState = { ... }).
+
+El servidor s’ha d’executar a http://localhost:5000 (port 5000).
+
+Totes les respostes HTTP han de ser JSON.
+
+No es poden utilitzar noms genèrics com items, list, todo, task per a variables o rutes. Cal respectar els noms indicats en aquest enunciat.
+
+4. Rutes HTTP obligatòries
+Totes les respostes HTTP d’èxit han de seguir aquest format general:
+
+{
+     "ok":  true,
+     "attendanceState":
+          {
+             //Objecte tal com hem definit abans.
+          }
+}
+ 
+
+En cas d’error:
+
+{
+    "ok" : false,
+    "error": "Missatge descriptiu de l'error"
+}
+ 
+
+Les rutes s’han d’implementar amb els noms exactes següents:
+
+4.1. GET /api/attendance/state
+Objectiu: obtenir l’estat complet d’assistència de l’alumne.
+
+Request body: cap.
+
+Resposta d’exemple (èxit):
+
+{
+
+    "ok": true,
+
+    "attendanceState":
+
+             {
+
+                "studentName": "Pol Prats",
+
+                "attendanceDays":
+
+                      [ //array de tots els dies.
+
+                           {
+
+                                 "attendanceDate": "3",
+
+                                 "attendanceStatus": "PRESENT"
+
+                           }
+
+                       ]
+
+              }
+
+ }
+
+Inclou al nivell superior de l’objecte d’estat el camp: "metaAssistenciaDebug": {}
+
+4.2. POST /api/attendance/day
+Objectiu: afegir nous dies d’assistència.
+
+Request body (obligatori, format exacte):
+
+{ "attendanceDate": "4", "attendanceStatus": "FALTA" }
+
+Requisits:
+
+La data (attendanceDate) ha de ser única.
+
+Si ja existeix un dia amb aquesta data, s’ha de retornar error.
+
+Resposta en cas d’èxit:
+
+{
+
+     "ok": true,
+
+     "attendanceState":
+
+                 {
+
+                     "studentName": "Pol Prats", 
+
+                     "attendanceDays":
+
+                          [
+
+                             {
+
+                                    "attendanceDate": "3",
+
+                                    "attendanceStatus": "PRESENT"
+
+                             }, {
+
+                                    "attendanceDate": "4",
+
+                                    "attendanceStatus": "FALTA"
+
+                             }
+
+                        ]
+
+                  }
+
+}
+
+Resposta en cas d’error (exemple si la data ja existeix):
+
+{ "ok": false, "error": "Attendance day for this date already exists" }
+
+ 
+
+4.3. PUT /api/attendance/day/:attendanceDate
+Objectiu: modificar l’estat d’assistència d’un dia existent.
+
+:attendanceDate és un paràmetre de ruta en format "3".
+
+Request body (format exacte):
+
+                   { "attendanceStatus": "RETARD" }
+
+Requisits:
+
+Només s’ha de modificar l’entrada que tingui attendanceDate igual al paràmetre de la ruta.
+
+Si la data no existeix, cal retornar error.
+
+Resposta en cas d’èxit:
+
+{
+
+    "ok": true,
+
+     "attendanceState":
+
+           {
+
+              "studentName": "Pol Prats", 
+
+              "attendanceDays":
+
+                 [
+
+                    {
+
+                        "attendanceDate": "7",
+
+                        "attendanceStatus": "RETARD"
+
+                    }
+
+                  ]
+
+               }
+
+}
+
+ 
+
+4.4. DELETE /api/attendance/day/:attendanceDate
+Objectiu: eliminar un dia del registre d’assistència.
+
+:attendanceDate és un paràmetre de ruta en format "9".
+
+Request body: cap.
+
+Resposta en cas d’èxit (després d’eliminar):
+
+{ 
+
+    "ok": true,
+
+    "attendanceState":
+
+          {
+
+             "studentName": "Pol Prats", 
+
+             "attendanceDays": "2"
+
+          }
+
+}
+
+Resposta en cas d’error (si la data no existeix):
+
+{ "ok": false, "error": "Attendance day not found" }
+
+ 
+
+5. WebSocket: URL i missatges
+5.1. Endpoint de WebSocket
+El servidor ha d’acceptar connexions WebSocket a la següent URL:
+
+ 
+ws://localhost:5000/
+S’ha d’utilitzar la llibreria ws.
+
+No cal que el client enviï missatges al servidor per WebSocket: en aquesta pràctica totes les modificacions es fan via HTTP i el WebSocket s’utilitza només per rebre notificacions.
+
+5.2. Missatge inicial a la connexió
+Quan un client WebSocket es connecta correctament a ws://localhost:5000/, el servidor ha d’enviar immediatament un missatge amb aquest format exactament:
+
+{ "eventType": "attendance-initial",
+
+"attendanceState":
+
+           { "studentName": "Pol Prats",
+
+             "attendanceDays": [
+
+                      { "attendanceDate": "4", "attendanceStatus": "PRESENT" }
+
+              ]
+
+            }
+
+}
+
+Inclou al nivell superior de l’objecte d’estat el camp: "metaAssistenciaDebug": {}
+
+5.3. Missatges de notificació de canvis
+Cada vegada que una de les rutes HTTP següents s’executi amb èxit:
+
+POST /api/attendance/day
+
+PUT /api/attendance/day/:attendanceDate
+
+DELETE /api/attendance/day/:attendanceDate
+
+el servidor ha d’enviar un broadcast a tots els clients WebSocket connectats amb el format:
+
+{ "eventType": "attendance-updated",
+
+  "changeType": "CREATED",
+
+  "changedDate": "5",
+
+  "attendanceState":
+
+         { "studentName": "Pol Prats", 
+
+               "attendanceDays":
+
+                   [
+
+                       { "attendanceDate": "5", "attendanceStatus": "PRESENT" }
+
+                   ]
+
+           }
+
+}
+
+On:
+
+eventType és sempre "attendance-updated" per a aquests casos.
+
+changeType és:
+
+"CREATED" si s’ha afegit un dia nou (POST).
+
+"UPDATED" si s’ha modificat l’estat d’un dia existent (PUT).
+
+"DELETED" si s’ha eliminat un dia (DELETE).
+
+changedDate és la data "8" afectada per l’operació.
+
+6. Com s’ha de provar el projecte
+6.1. Proves amb Thunder Client o Postman (HTTP)
+Fer un GET http://localhost:5000/api/attendance/state i comprovar que el format JSON és l’esperat.
+
+Afegir un dia nou amb:
+
+POST http://localhost:5000/api/attendance/day
+
+Cos JSON amb attendanceDate i attendanceStatus correctes.
+
+Modificar un dia existent amb:
+
+PUT http://localhost:5000/api/attendance/day/6
+
+Eliminar un dia amb:
+
+DELETE http://localhost:5000/api/attendance/day/5
+
+Comprovar sempre que:
+
+El camp ok sigui true en operacions correctes.
+
+El camp attendanceState tingui el format exacte definit.
+
+6.2. Proves amb WebSocket Client (plugin de VS Code)
+Obrir el plugin WebSocket Client.
+
+Configurar dues connexions separades a:
+
+ 
+ws://localhost:5000/
+(per exemple, amb dues pestanyes).
+
+Quan cada client es connecti, ha de rebre un missatge attendance-initial amb l’estat actual.
+
+Amb Thunder Client / Postman:
+
+Fer un POST /api/attendance/day per afegir un dia.
+
+Fer un PUT /api/attendance/day/:attendanceDate per modificar un dia.
+
+Fer un DELETE /api/attendance/day/:attendanceDate per eliminar-lo.
+
+Després de cada operació correcta:
+
+Tots dos clients WebSocket han de rebre un missatge attendance-updated amb:
+
+changeType correcte.
+
+changedDate correcte.
+
+attendanceState actualitzat.
+
+         
+
+         And tell me how to do post and put and delete in thunder client
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+         {
+  "ok": true,
+  "attendanceState": {
+    "studentName": "Harsh Gautambhai Jagani",
+    "attendanceDays": [
+      { "attendanceDate": "4", "attendanceStatus": "RETARD" }
+    ],
+    "metaAssistenciaDebug": {}
+  }
+}

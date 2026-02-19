@@ -1,0 +1,11 @@
+{
+  "name": "aea1.1.4",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "posenet-test.js",
+  "dependencies": {
+    "@tensorflow/tfjs": "^4.0.0",
+    "@tensorflow-models/posenet": "^2.2.1",
+    "jpeg-js": "^0.4.4"
+  }
+}

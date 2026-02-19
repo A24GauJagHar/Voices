@@ -1,0 +1,20 @@
+[
+ {
+ "id": 1,
+ "titol": "Breaking Bad",
+ "temporades": 5,
+ "estat": "Completada",
+ "genere": "Crime",
+ "puntuacio": 9.5,
+ "dataAfegida": "2024-09-20T10:00:00.000Z"
+ },
+ {
+ "id": 2,
+ "titol": "Stranger Things", 
+ "temporades": 4,
+ "estat": "En curs",
+ "genere": "Sci-Fi",
+ "puntuacio": 8.7,
+ "dataAfegida": "2024-09-22T15:30:00.000Z"
+ }
+]

@@ -1,0 +1,28 @@
+=== Log initialized ===
+[2025-10-05T13:37:55.309Z] INFO: Series tracking system initialized
+[2025-10-05T13:37:55.315Z] INFO: User configuration created: Joel Chica
+[2025-10-05T13:37:55.319Z] INFO: Backup created: backups\series_backup_2025-10-05T13-37-55-317Z.txt
+[2025-10-05T13:37:55.320Z] INFO: Series added: Breaking Bad
+[2025-10-05T13:37:55.323Z] INFO: Backup created: backups\series_backup_2025-10-05T13-37-55-322Z.txt
+[2025-10-05T13:37:55.326Z] INFO: Series added: Stranger Things
+[2025-10-05T13:37:55.329Z] INFO: Backup created: backups\series_backup_2025-10-05T13-37-55-327Z.txt
+[2025-10-05T13:37:55.333Z] INFO: Series added: The Office
+[2025-10-05T13:37:55.340Z] INFO: Series list viewed
+[2025-10-05T13:38:23.914Z] INFO: Series tracking system initialized
+[2025-10-05T13:38:23.927Z] INFO: User configuration created: Joel Chica
+[2025-10-05T13:38:23.932Z] INFO: Backup created: backups\series_backup_2025-10-05T13-38-23-929Z.txt
+[2025-10-05T13:38:23.936Z] INFO: Series added: Breaking Bad
+[2025-10-05T13:38:23.939Z] INFO: Backup created: backups\series_backup_2025-10-05T13-38-23-938Z.txt
+[2025-10-05T13:38:23.941Z] INFO: Series added: Stranger Things
+[2025-10-05T13:38:23.946Z] INFO: Backup created: backups\series_backup_2025-10-05T13-38-23-944Z.txt
+[2025-10-05T13:38:23.947Z] INFO: Series added: The Office
+[2025-10-05T13:38:23.955Z] INFO: Series list viewed
+[2025-10-05T15:04:53.299Z] INFO: Series tracking system initialized
+[2025-10-05T15:04:53.314Z] INFO: User configuration created: Harsh Gautambhai
+[2025-10-05T15:04:53.321Z] INFO: Backup created: backups\series_backup_2025-10-05T15-04-53-317Z.txt
+[2025-10-05T15:04:53.325Z] INFO: Series added: Breaking Bad
+[2025-10-05T15:04:53.328Z] INFO: Backup created: backups\series_backup_2025-10-05T15-04-53-326Z.txt
+[2025-10-05T15:04:53.330Z] INFO: Series added: Stranger Things
+[2025-10-05T15:04:53.334Z] INFO: Backup created: backups\series_backup_2025-10-05T15-04-53-332Z.txt
+[2025-10-05T15:04:53.337Z] INFO: Series added: The Office
+[2025-10-05T15:04:53.354Z] INFO: Series list viewed

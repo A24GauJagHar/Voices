@@ -1,0 +1,210 @@
+/*import fs from "fs/promises";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const files = {
+  series: path.join(__dirname, "data/series.json"),
+  usuari: path.join(__dirname, "data/usuari.json"),
+  config: path.join(__dirname, "data/config.json"),
+  log: path.join(__dirname, "logs/activitat.log"),
+};
+
+const folders = {
+  data: path.join(__dirname, "data"),
+  logs: path.join(__dirname, "logs"),
+  backups: path.join(__dirname, "backups"),
+  informes: path.join(__dirname, "informes"),
+  import: path.join(__dirname, "import"),
+};
+
+async function ensureDirectories() {
+  for (const dir of Object.values(folders)) {
+    try {
+      await fs.access(dir);
+    } catch {
+      await fs.mkdir(dir);
+      console.log(`Created folder: ${path.basename(dir)}`);
+    }
+  }
+}
+
+async function writeLog(message) {
+  const date = new Date().toISOString();
+  await fs.appendFile(files.log, `[${date}] ${message}\n`);
+}
+
+async function readJSON(file, defaultValue = null) {
+  try {
+    const content = await fs.readFile(file, "utf8");
+    return JSON.parse(content);
+  } catch {
+    return defaultValue;
+  }
+}
+
+async function writeJSON(file, data) {
+  const content = JSON.stringify(data, null, 2);
+  await fs.writeFile(file, content, "utf8");
+}
+
+async function ensureFile(file, defaultData) {
+  try {
+    await fs.access(file);
+  } catch {
+    await writeJSON(file, defaultData);
+    console.log(`Created ${path.basename(file)} with default data`);
+  }
+}
+
+// ================ Validation ===================
+function validateSerie(serie) {
+  const errors = [];
+  if (!serie.titol || typeof serie.titol !== "string")
+    errors.push("Títol invàlid o inexistent.");
+  if (!Number.isInteger(serie.temporades) || serie.temporades < 1)
+    errors.push("Número de temporades invàlid.");
+  if (!["En emissió", "Finalitzada", "Pendent"].includes(serie.estat))
+    errors.push("Estat ha de ser 'En emissió', 'Finalitzada' o 'Pendent'.");
+  if (serie.puntuacio !== undefined && (serie.puntuacio < 0 || serie.puntuacio > 10))
+    errors.push("Puntuació ha d’estar entre 0 i 10.");
+  return errors;
+}
+
+async function backupSeries() {
+  try {
+    // Ensure data file exists
+    await fs.access(files.series);
+
+    const date = new Date().toISOString().replace(/[:.]/g, "-");
+    const backupFile = path.join(folders.backups, `series-${date}.json`);
+    await fs.copyFile(files.series, backupFile);
+
+    await writeLog(`Backup creat: ${backupFile}`);
+    console.log(`Backup creat: ${backupFile}`);
+  } catch (err) {
+    console.log("No s'ha pogut crear el backup:", err.message);
+    await writeLog(`No s'ha pogut crear el backup: ${err.message}`);
+  }
+}
+
+async function importSeries() {
+  const importFile = path.join(folders.import, "new_series.json");
+
+  // Check if import file exists
+  try {
+    await fs.access(importFile);
+  } catch {
+    console.log("Cap fitxer d'importació trobat a la carpeta 'import'.");
+    return;
+  }
+
+  console.log("Fitxer d'importació trobat. Processant...");
+  const imported = await readJSON(importFile, []);
+
+  if (!Array.isArray(imported) || imported.length === 0) {
+    console.log("Fitxer d'importació buit o invàlid.");
+    await writeLog("Fitxer d'importació buit o invàlid.");
+    return;
+  }
+
+  const series = await readJSON(files.series, []);
+  let addedCount = 0;
+
+  for (const s of imported) {
+    const errors = validateSerie(s);
+    if (errors.length === 0) {
+      const nextId = series.length > 0 ? Math.max(...series.map(x => x.id || 0)) + 1 : 1;
+      s.id = nextId;
+      s.dataAfegida = new Date().toISOString();
+      series.push(s);
+      addedCount++;
+    } else {
+      console.log(`Sèrie no importada (${s.titol || "sense títol"}):`, errors);
+    }
+  }
+
+  // Backup before saving
+  await backupSeries();
+
+  // Save updated data
+  await writeJSON(files.series, series);
+
+  // Remove import file
+  await fs.unlink(importFile);
+
+  await writeLog(`Importades ${addedCount} noves sèries des de new_series.json`);
+  console.log(`${addedCount} sèries importades correctament.`);
+}
+
+
+async function generateReport() {
+  const series = await readJSON(files.series, []);
+  const usuari = await readJSON(files.usuari, {});
+
+  const finalitzades = series.filter(s => s.estat === "Finalitzada");
+
+  const report = {
+    data: new Date().toISOString(),
+    totalSeries: series.length,
+    finalitzades: finalitzades.length,
+    usuari: {
+      nom: usuari.nom,
+      seriesVistes: usuari.estadistiques?.seriesVistes,
+      puntuacioMitjana: usuari.estadistiques?.puntuacioMitjana,
+    },
+    detallsFinalitzades: finalitzades.map(s => ({
+      titol: s.titol,
+      puntuacio: s.puntuacio,
+    })),
+  };
+
+  const fileName = `informe_${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
+  const fullPath = path.join(folders.informes, fileName);
+  await writeJSON(fullPath, report);
+  await writeLog(`Informe generat: ${fileName}`);
+  console.log(`Informe creat: ${fileName}`);
+}
+
+// ================ Main ===================
+async function main() {
+  console.log("Inicialitzant aplicació de sèries...\n");
+
+  await ensureDirectories();
+
+  // Initialize basic data files
+  await ensureFile(files.series, []);
+  await ensureFile(files.usuari, {
+    id: 1,
+    nom: "Anna Puig",
+    preferencies: {
+      generes: ["Drama", "Ciència-ficció"],
+      idioma: "Català",
+    },
+    estadistiques: {
+      seriesVistes: 12,
+      puntuacioMitjana: 8.3,
+    },
+    dataRegistre: new Date().toISOString(),
+  });
+  await ensureFile(files.config, {
+    aplicacio: "Gestor de Sèries",
+    versio: "1.0",
+    usuari: "Anna Puig",
+    dataInici: new Date().toISOString(),
+    seriesSeguides: 0,
+    ultimaActualitzacio: null,
+  });
+
+  await writeLog("Aplicació iniciada correctament.");
+
+  await importSeries();
+
+  await generateReport();
+
+  console.log("Programa completat correctament!");
+}
+
+main();*/

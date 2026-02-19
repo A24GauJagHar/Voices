@@ -1,0 +1,1 @@
+console.log("Hola Docker! Node funciona dins un contenidor "); 

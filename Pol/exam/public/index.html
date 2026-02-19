@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Compras en Tiempo Real - Simplificada</title>
+    </head>
+<body>
+    <h1>Lista de Compras</h1>
+
+    <form id="add-form">
+        <input type="text" id="name" placeholder="Nombre del Item" required>
+        <input type="number" id="quantity" placeholder="Cantidad" value="1" min="1" required>
+        <button type="submit">Añadir Item</button>
+    </form>
+
+    <ul id="items-list">
+    </ul>
+    
+    <script>
+        // 1. Elementos HTML que vamos a usar
+        const listContainer = document.getElementById('items-list');
+        const form = document.getElementById('add-form');
+
+        // 2. Conexión en Tiempo Real (WebSocket)
+        const socket = new WebSocket('ws://localhost:3000'); 
+        
+        socket.onopen = () => { console.log('WebSocket: Conexión establecida.'); };
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            // Cada vez que hay un cambio en el servidor, redibujamos la lista.
+            if (data.type === 'UPDATE' || data.type === 'INITIAL') {
+                renderList(data.items); 
+            }
+        };
+
+        // 3. Función Central de Renderizado (Actualiza la UI)
+        function renderList(items) {
+            listContainer.innerHTML = ''; 
+            
+            if (items.length === 0) {
+                listContainer.innerHTML = '<li>La lista está vacía. ¡Añade algo!</li>';
+                return;
+            }
+
+            items.forEach(item => {
+                const li = document.createElement('li');
+                // IMPORTANTE: Asegúrate de que tu servidor Express esté corriendo 
+                // para que los botones y la actualización funcionen.
+                li.innerHTML = `
+                    <div style="display: inline-block;">
+                        <input type="text" class="edit-name" value="${item.name}" data-id="${item.id}">
+                        <input type="number" class="edit-quantity" value="${item.quantity}" min="1" data-id="${item.id}">
+                    </div>
+                    <div style="display: inline-block; margin-left: 10px;">
+                        <button class="update-btn" data-id="${item.id}">Guardar</button>
+                        <button class="delete-btn" data-id="${item.id}">Borrar</button>
+                    </div>
+                `;
+                listContainer.appendChild(li);
+            });
+        }
+
+        // 4. Función Genérica para peticiones API (POST, PUT, DELETE)
+        async function handleApiAction(method, path, body = null) {
+            try {
+                const response = await fetch(path, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: body ? JSON.stringify(body) : null
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Error ${method} (${response.status}): ${errorData.error}`);
+                }
+                return response;
+            } catch (error) {
+                console.error(`Error durante la operación ${method}:`, error);
+                alert(`No se pudo completar la acción. Revisa la consola.`);
+                throw error;
+            }
+        }
+
+        // 5. Manejar la acción de AÑADIR (POST)
+        form.onsubmit = async (event) => {
+            event.preventDefault(); 
+
+            const name = document.getElementById('name').value;
+            const quantity = document.getElementById('quantity').value;
+            
+            try {
+                await handleApiAction('POST', '/api/items', { name, quantity });
+
+                // Limpiar el formulario si la acción fue exitosa
+                document.getElementById('name').value = ''; 
+                document.getElementById('quantity').value = '1';
+
+            } catch (e) {
+                // El error ya fue reportado en handleApiAction
+            }
+        };
+
+        // 6. Manejar las acciones de BORRAR (DELETE) y ACTUALIZAR (PUT)
+        listContainer.addEventListener('click', async (event) => {
+            const target = event.target;
+            const id = target.dataset.id;
+            
+            if (!id) return;
+
+            // Acción: BORRAR
+            if (target.classList.contains('delete-btn')) {
+                await handleApiAction('DELETE', `/api/items/${id}`);
+            }
+            
+            // Acción: ACTUALIZAR (Guardar)
+            if (target.classList.contains('update-btn')) {
+                const li = target.closest('li');
+                const newName = li.querySelector('.edit-name').value;
+                const newQuantity = parseInt(li.querySelector('.edit-quantity').value);
+                
+                if (!newName || isNaN(newQuantity) || newQuantity <= 0) {
+                    alert('Nombre y cantidad válida son requeridos para actualizar.');
+                    return;
+                }
+
+                await handleApiAction('PUT', `/api/items/${id}`, { name: newName, quantity: newQuantity });
+            }
+        });
+    </script>
+</body>
+</html>
